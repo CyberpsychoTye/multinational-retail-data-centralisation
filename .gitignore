@@ -1,3 +1,5 @@
 db_creds.yaml
 .vscode/
 sales_data_centralisation.session.sql
+
+__pycache__/
