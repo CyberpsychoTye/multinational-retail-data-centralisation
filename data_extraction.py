@@ -19,13 +19,11 @@ class DataExtraction:
         return "END."
     
     def read_rds_table(self, table_name: str) -> pd.DataFrame:
-        dataframe = pd.read_sql(table_name, self.engine)
+        dataframe = pd.read_sql(table_name, self.engine, index_col = "index")
         return dataframe
     
 
-connector = DatabaseConnector("db_creds.yaml")
-extractor = DataExtraction(connector)
-user_df = extractor.read_rds_table("legacy_users")
 
-print(user_df)
+
+
 
