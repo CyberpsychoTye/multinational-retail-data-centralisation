@@ -72,6 +72,11 @@ class DataCleaning:
             return re.sub(r"\+44", "0", x)
         return x
     
+    # Converts columns into datatype: "Category" to maximise storage efficiency
+    def convert_to_categorical(self, columns: list, dataframe: pd.DataFrame):
+        for column in columns:
+            dataframe[column] = dataframe[column].astype("category")
+    
     # Pipeline method for cleaning the "legacy_users" table
     def clean_user_data(self, tablename: str) -> pd.DataFrame:
         df = self.extractor.read_rds_table(tablename)
@@ -107,6 +112,10 @@ class DataCleaning:
         df["phone_number"] = df["phone_number"].apply(self.uk_code_remover)
         # Converts input in the "join_date" column to ISO format:
         df["join_date"] = df["join_date"].apply(lambda x: pd.to_datetime(x, format = "mixed"))
+        # Resets index:
+        df.reset_index(drop = True, inplace = True, names = "index")
+        # Converts datatype of "country" and "country_code" to "category":
+        self.convert_to_categorical(["country", "country_code"], df)
 
         return df
     
