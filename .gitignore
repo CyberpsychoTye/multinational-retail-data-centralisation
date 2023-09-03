@@ -5,3 +5,5 @@ sales_data_centralisation.session.sql
 __pycache__/
 
 df_visualiser.ipynb
+
+local_sales_data_creds.yaml

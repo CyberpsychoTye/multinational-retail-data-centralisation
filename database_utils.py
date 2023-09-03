@@ -1,7 +1,8 @@
 import yaml
 from typing import Annotated
 from sqlalchemy import create_engine, text
-
+import pandas as pd
+import sqlalchemy.types as alchemy_types
 
 class DatabaseConnector:
 
@@ -56,3 +57,24 @@ class DatabaseConnector:
             print(f"table_name: {row.table_name}, table_schema: {row.table_schema}")
         return "END."
 
+    # Takes in a dataframe and maps the datatype of the columns to an appropriate PostgreSQL datatype
+    def datatype_mapper(self, dataframe_to_upload: pd.DataFrame) -> dict:
+        mapper = {}
+        columns = dataframe_to_upload.columns
+        for column in columns:
+            if dataframe_to_upload[column].dtype == "O":
+                if len(dataframe_to_upload[column].apply(lambda x: len(x)).unique()) == 1:
+                    varchar_length = dataframe_to_upload[column].apply(lambda x: len(x)).unique()[0]
+                    mapper[column] = alchemy_types.VARCHAR(varchar_length)
+                else:
+                    mapper[column] = alchemy_types.TEXT()
+            elif isinstance(dataframe_to_upload[column].dtype, pd.CategoricalDtype):
+                varchar_length = max(dataframe_to_upload[column].apply(lambda x: len(x)).unique())
+                mapper[column] = alchemy_types.VARCHAR(varchar_length)
+            elif dataframe_to_upload[column].dtype == "<M8[ns]":
+                mapper[column] = alchemy_types.DATE()
+        return mapper
+    
+    def upload_to_db (self, db_name: str, db_index_label: str, dataframe_to_upload: pd.DataFrame):
+        column_datatype_mapper = self.datatype_mapper(dataframe_to_upload)
+        dataframe_to_upload.to_sql(name = db_name, con = self.engine, index_label = db_index_label, dtype = column_datatype_mapper)

@@ -6,10 +6,6 @@ from data_extraction import DataExtraction
 
 class DataCleaning:
 
-    def __init__(self, extractor_instance: object):
-        if isinstance(extractor_instance, DataExtraction):
-            self.extractor = extractor_instance
-
     def date_converter(self, x):
         if x[0].lower() == "january":
             return f"{x[1]}-01-{x[2]}"
@@ -78,8 +74,8 @@ class DataCleaning:
             dataframe[column] = dataframe[column].astype("category")
     
     # Pipeline method for cleaning the "legacy_users" table
-    def clean_user_data(self, tablename: str) -> pd.DataFrame:
-        df = self.extractor.read_rds_table(tablename)
+    def clean_user_data(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+        df = dataframe
         df = df.sort_values(by = ["index"]) 
         # Drops rows with invalid data inputs:
         valid_country_codes_bool= df["country_code"].apply(lambda x: len(x) > 4)
@@ -118,9 +114,15 @@ class DataCleaning:
         self.convert_to_categorical(["country", "country_code"], df)
 
         return df
-    
+
+# TO DO: create function that produces a dict that maps columns to datatypes (used in pd.to_sql)
+# TO DO: code the upload_to_db method that uploads dataframe to sql table
+
 connector = DatabaseConnector("db_creds.yaml")
 extractor = DataExtraction(connector)
-cleaner = DataCleaning(extractor)
+df = extractor.read_rds_table("legacy_users")
+cleaner = DataCleaning()
 
-hello = cleaner.clean_user_data("legacy_users")
+hello = cleaner.clean_user_data(df)
+local_sales_data_connector = DatabaseConnector("local_sales_data_creds.yaml")
+local_sales_data_connector.upload_to_db("dim_users", "index", hello)
