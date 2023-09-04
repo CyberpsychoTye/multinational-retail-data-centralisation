@@ -115,14 +115,5 @@ class DataCleaning:
 
         return df
 
-# TO DO: create function that produces a dict that maps columns to datatypes (used in pd.to_sql)
-# TO DO: code the upload_to_db method that uploads dataframe to sql table
 
-connector = DatabaseConnector("db_creds.yaml")
-extractor = DataExtraction(connector)
-df = extractor.read_rds_table("legacy_users")
-cleaner = DataCleaning()
 
-hello = cleaner.clean_user_data(df)
-local_sales_data_connector = DatabaseConnector("local_sales_data_creds.yaml")
-local_sales_data_connector.upload_to_db("dim_users", "index", hello)
